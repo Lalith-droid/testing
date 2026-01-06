@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Circuit Cube Chute Release</title>
+</head>
+<body>
+    <h1>Parachute Control</h1>
+    <button onclick="connect()">1. Connect to Cube</button>
+    <br><br>
+    <button onclick="deploy()" style="background:red; color:white; padding:20px;">2. DEPLOY PARACHUTE</button>
+    <button onclick="stop()">Stop Motor</button>
+
+    <script>
+        const UART_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        const UART_TX = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+        let txCharacteristic;
+
+        async function connect() {
+            try {
+                // Filters for the "Tenka Cube" name prefix
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'Tenka' }],
+                    optionalServices: [UART_SERVICE]
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(UART_SERVICE);
+                txCharacteristic = await service.getCharacteristic(UART_TX);
+                alert("Connected!");
+            } catch (e) { console.error(e); }
+        }
+
+        async function sendCommand(cmd) {
+            if (!txCharacteristic) return alert("Connect first!");
+            // Protocol format: dNNNc (d=direction, NNN=speed, c=port)
+            const encoder = new TextEncoder();
+            await txCharacteristic.writeValue(encoder.encode(cmd));
+        }
+
+        function deploy() {
+            // Rotates motor on Port A at full speed to pull a pin or release a latch
+            sendCommand('+255a'); 
+        }
+
+        function stop() {
+            // Stops the motor on Port A
+            sendCommand('+000a');
+        }
+    </script>
+</body>
+</html>
