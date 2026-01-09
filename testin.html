@@ -1,0 +1,5 @@
+// Replace your existing requestDevice block with this test version:
+device = await navigator.bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: [SERVICE_UUID]
+});
